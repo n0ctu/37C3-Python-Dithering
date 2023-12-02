@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from PIL import Image
 
 def dithering(image, dithering_algorithm='burkes'):
 
@@ -16,6 +17,7 @@ def dithering(image, dithering_algorithm='burkes'):
     if dithering_algorithm == 'burkes':
         error_matrix = np.array([[0, 0, 0, 8, 4],
                                  [2, 4, 8, 4, 2]]) / 32
+        
     elif dithering_algorithm == 'sierra':
         error_matrix = np.array([[0, 0, 0, 5, 3],
                                  [2, 4, 5, 4, 2], 
@@ -41,23 +43,75 @@ def dithering(image, dithering_algorithm='burkes'):
             error = old_pixel - new_pixel
 
             # Distribute the error to neighboring pixels
-            for dy in range(error_matrix.shape[0]):
-                for dx in range(error_matrix.shape[1]):
-                    # Move cursor to the center of the first row of the error matrix (starting point)
-                    new_x = x + dx - (error_matrix.shape[1] // 2)
-                    new_y = y + dy
+            for erry in range(error_matrix.shape[0]):
+                for errx in range(error_matrix.shape[1]):
+                    new_x = x + errx - (error_matrix.shape[1] // 2)
+                    new_y = y + erry
 
-                    # Fairly inefficient ...
                     if new_x >= 0 and new_x < cols and new_y >= 0 and new_y < rows:
-                        dithered_image[new_y, new_x] += error * error_matrix[dy, dx]
+                        updated_part = error * error_matrix[erry, errx]
+                        # Added clipping
+                        dithered_image[new_y, new_x] = np.clip(dithered_image[new_y, new_x] + updated_part, 0, 255)
 
     return dithered_image
 
-# Demo usage for now
-image = cv2.imread('lenna.jpg')
-dithered_image = dithering(image, 'burkes')
+def video_to_frames(video_path, max_frames=None):
+    video = cv2.VideoCapture(video_path)
+    frames = []
+    frame_count = 0
 
-# Display the dithered image
-cv2.imshow('Dithered Image', dithered_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    while video.isOpened() and (max_frames is None or frame_count < max_frames):
+        ret, frame = video.read()
+        if ret:
+            frames.append(frame)
+            frame_count += 1
+        else:
+            break
+
+    video.release()
+    return frames
+
+def frames_to_gif(frames, gif_path, fps=24):
+    pil_images = [Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) for frame in frames]
+    pil_images[0].save(gif_path, save_all=True, append_images=pil_images[1:], loop=0, duration=1000/fps)
+
+
+def main():
+    
+    input = 'input.mp4'
+    width = 256
+    height = 256
+    fps = 24
+    max_frames = None
+    dither_algorithm = 'floyd-steinberg'
+
+    # Read the video and convert it to frames
+    frames = video_to_frames(input, max_frames)
+
+    
+    # Dither each frame
+    dithered_frames = []
+    for frame in frames:
+        # Resize the frame to the desired dimensions
+        frame = cv2.resize(frame, (width, height))
+        dithered_frame = dithering(frame, dither_algorithm)
+        dithered_frames.append(dithered_frame)
+        print("Processing: Frame", len(dithered_frames), "of", len(frames))
+
+    # Save the frames as a GIF
+    frames_to_gif(dithered_frames, 'video.gif', fps)
+
+    '''
+    # Single Image Testing
+    image = cv2.imread('test.jpg')
+    resized_image = cv2.resize(image, (256, 256))
+    dithered_image = dithering(resized_image, 'burkes')
+
+    # Display the dithered image
+    cv2.imshow('Dithered Image', dithered_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    '''
+
+if __name__ == '__main__':
+    main()
