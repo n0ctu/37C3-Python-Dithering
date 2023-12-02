@@ -53,13 +53,11 @@ def dithering(image, dithering_algorithm='burkes'):
 
     return dithered_image
 
-# Load an image
+# Demo usage for now
 image = cv2.imread('lenna.jpg')
-
-# Apply dithering
 dithered_image = dithering(image, 'burkes')
 
-# Display the dithered image for now
+# Display the dithered image
 cv2.imshow('Dithered Image', dithered_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
