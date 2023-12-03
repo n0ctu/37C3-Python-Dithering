@@ -9,7 +9,7 @@ Current challenges:
 - [ ] Speed up the conversion process
 - [ ] Even after adding clipping to newly calculated pixels, there still seems to be a clipping issue resulting in stray pixels populating downwards-right
 
-![Clipping issue](issue/clipping_issue.gif)
+![Clipping issue](issues/clipping_issue.gif)
 
  ## Further information
 
