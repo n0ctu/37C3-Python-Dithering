@@ -1,2 +1,6 @@
+.gitignore
 venv/
+fonts/
 lenna.jpg
+input.mp4
+video.gif

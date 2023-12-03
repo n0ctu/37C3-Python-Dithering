@@ -45,13 +45,18 @@ def dithering(image, dithering_algorithm='burkes'):
             # Distribute the error to neighboring pixels
             for erry in range(error_matrix.shape[0]):
                 for errx in range(error_matrix.shape[1]):
-                    new_x = x + errx - (error_matrix.shape[1] // 2)
+
+                    new_x = x + errx - (error_matrix.shape[0] // 2)
                     new_y = y + erry
 
+                    # Skip if out of bounds
                     if new_x >= 0 and new_x < cols and new_y >= 0 and new_y < rows:
-                        updated_part = error * error_matrix[erry, errx]
+                        updated_pixel = error * error_matrix[erry, errx]
                         # Added clipping
-                        dithered_image[new_y, new_x] = np.clip(dithered_image[new_y, new_x] + updated_part, 0, 255)
+                        dithered_image[new_y, new_x] = np.clip(dithered_image[new_y, new_x] + updated_pixel, 0, 255)
+
+        cv2.imshow('Dithered Image', dithered_image)
+        cv2.waitKey(10)
 
     return dithered_image
 
